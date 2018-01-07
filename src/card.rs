@@ -69,7 +69,59 @@ impl Card {
     pub fn new(suit: Suit, value: Value) -> Self {
         Self { suit, value }
     }
+
+    pub fn place(self, visibility: Visibility) -> CardInPlay {
+        CardInPlay::new(self, visibility)
+    }
+
+    pub fn place_down(self) -> CardInPlay {
+        self.place(Visibility::FaceDown)
+    }
+
+    pub fn place_up(self) -> CardInPlay {
+        self.place(Visibility::FaceUp)
+    }
 }
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+pub enum Visibility {
+    FaceUp,
+    FaceDown
+}
+
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+pub struct CardInPlay {
+    card: Card,
+    pub visibility: Visibility
+}
+
+impl CardInPlay {
+    pub fn new(card: Card, visibility: Visibility) -> Self {
+        Self { card, visibility }
+    }
+
+    pub fn flip_up(&mut self) -> bool {
+        match self.visibility {
+            Visibility::FaceUp => false,
+            Visibility::FaceDown => {
+                self.visibility = Visibility::FaceUp;
+                true
+            }
+        }
+    }
+
+    pub fn flip_down(&mut self) -> bool {
+        match self.visibility {
+            Visibility::FaceUp => {
+                self.visibility = Visibility::FaceDown;
+                true
+            },
+            Visibility::FaceDown => false,
+        }
+    }
+}
+
 
 pub fn deal() -> Vec<Card> {
     let mut deck = Vec::new();
