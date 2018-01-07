@@ -1,0 +1,6 @@
+[package]
+name = "solitairey_confinement"
+version = "0.0.1"
+authors = ["Zack M. Davis <code@zackmdavis.net>"]
+
+[dependencies]
