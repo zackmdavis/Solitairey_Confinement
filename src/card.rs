@@ -120,6 +120,13 @@ impl CardInPlay {
             Visibility::FaceDown => false,
         }
     }
+
+    pub fn look(&self) -> Option<Card> {
+        match self.visibility {
+            Visibility::FaceUp => Some(self.card),
+            Visibility::FaceDown => None
+        }
+    }
 }
 
 
