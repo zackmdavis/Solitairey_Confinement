@@ -1,4 +1,4 @@
-#![allow(dead_code, unused_imports)]
+#![allow(dead_code)]
 
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
@@ -40,17 +40,29 @@ impl Distribution {
         *self.backing.get(&card).unwrap_or(&0) as f64 / (total as f64)
     }
 
-    pub fn color_probability(&self, color: Color) -> f64 {
+    pub fn property_probability(&self, property: &Fn(Card) -> bool) -> f64 {
         let total: usize = self.backing.values().sum();
-        let with_color: usize = self.backing.keys()
+        let with_property: usize = self.backing.keys()
             .filter_map(|&card|
-                        if card.suit.color() == color {
+                        if property(card) {
                             Some(1)
                         } else {
                             None
                         })
             .sum();
-        (with_color as f64)/(total as f64)
+        (with_property as f64)/(total as f64)
+    }
+
+    pub fn color_probability(&self, color: Color) -> f64 {
+        self.property_probability(&(|card| card.suit.color() == color))
+    }
+
+    pub fn suit_probability(&self, suit: Suit) -> f64 {
+        self.property_probability(&(|card| card.suit == suit))
+    }
+
+    pub fn value_probability(&self, value: Value) -> f64 {
+        self.property_probability(&(|card| card.value == value))
     }
 
     pub fn entropy(&self) -> f64 {
