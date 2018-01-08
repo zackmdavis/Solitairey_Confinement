@@ -1,5 +1,10 @@
 #![allow(dead_code)]
 
+use std::collections::HashSet;
+use std::iter::FromIterator;
+use std::collections::hash_map::RandomState;
+
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Suit {
     Heart,
@@ -75,6 +80,29 @@ impl Value {
             Value::King => 13
         }
     }
+
+    pub fn from_int(i: isize) -> Self {
+        match i {
+            1 => Value::Ace,
+            2 => Value::Two,
+            3 => Value::Three,
+            4 => Value::Four,
+            5 => Value::Five,
+            6 => Value::Six,
+            7 => Value::Seven,
+            8 => Value::Eight,
+            9 => Value::Nine,
+            10 => Value::Ten,
+            11 => Value::Jack,
+            12 => Value::Queen,
+            13 => Value::King,
+            v => { panic!("illegal value: {}", v); }
+        }
+    }
+
+    pub fn successor(&self) -> Self {
+        Self::from_int(((self.as_int() + 1) % 13) + 1)
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -98,6 +126,10 @@ impl Card {
 
     pub fn place_up(self) -> CardInPlay {
         self.place(Visibility::FaceUp)
+    }
+
+    pub fn successor(&self) -> Card {
+        Card::new(self.suit, self.value.successor())
     }
 }
 
@@ -165,5 +197,8 @@ pub fn deal() -> Vec<Card> {
     // OS)
     //
     // maybe implement Fisher–Yates??
-    deck
+    //
+    // actually, the hash collections are randomized (for security), aren't they?
+    let hashed: HashSet<Card, RandomState> = HashSet::from_iter(deck.into_iter());
+    hashed.into_iter().collect()
 }

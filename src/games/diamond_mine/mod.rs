@@ -1,5 +1,7 @@
 #![allow(dead_code, unused_imports)]
 
+pub mod player;
+
 use std::fmt;
 
 use card::{self, Card, Suit, Value, CardInPlay, Visibility};
@@ -33,8 +35,8 @@ impl fmt::Display for DiamondMine {
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum Action {
-    ToFoundation(Card),
-    OnTableau { from: usize, to: usize, cards: Vec<Card>}
+    ToFoundation { from: usize, card: Card },
+    OnTableau { from: usize, to: usize, cards: Vec<Card> }
 }
 
 impl DiamondMine {
@@ -59,6 +61,15 @@ impl DiamondMine {
         mine
     }
 
+    pub fn next_to_foundation(&self) -> Option<Card> {
+        if self.foundation.is_empty() {
+            None
+        } else {
+            Some(self.foundation.iter().last()
+                 .expect("nonempty foundation should have card").successor())
+        }
+    }
+
     pub fn visible_in_pile(&self, pile_index: usize) -> Vec<Card> {
         self.tableau[pile_index].iter()
             .filter_map(|card_in_play| card_in_play.look())
@@ -68,9 +79,26 @@ impl DiamondMine {
     pub fn generate_actions(&self) -> Vec<Action> {
         let mut actions = Vec::new();
         for from_index in 0..13 {
+            let from_visible = self.visible_in_pile(from_index);
+            // diamonds can go to the foundation if the foundation is ready
+            if let Some(&diamond) = from_visible.iter().last()
+                .and_then(|card| if card.suit == Suit::Diamond {
+                    Some(card)
+                } else {
+                    None
+                }) {
+                    if self.next_to_foundation().is_none() ||
+                        self.next_to_foundation() == Some(diamond) {
+                            actions.push(Action::ToFoundation {
+                                from: from_index,
+                                card: diamond
+                            });
+                        }
+                    continue;
+                }
             for to_index in 0..13 {
-                let from_visible = self.visible_in_pile(from_index);
                 let to_visible = self.visible_in_pile(to_index);
+                // anything can go on an empty tableau space
                 if to_visible.is_empty() {
                     for (i, card) in from_visible.iter().enumerate() {
                         actions.push(Action::OnTableau {
@@ -80,15 +108,13 @@ impl DiamondMine {
                         })
                     }
                 } else {
+                    // you can build the tableaus down (but not on a diamond)
                     let destination = self.tableau[to_index][self.tableau[to_index].len()-1]
                         .look().expect("card should be face-up");
                     if destination.suit == Suit::Diamond {
                         continue;
                     }
-                    for (i, card) in from_visible.iter().enumerate() {
-                        if card.suit == Suit::Diamond {
-                            break;
-                        }
+                    for (i, &card) in from_visible.iter().enumerate() {
                         if destination.value.as_int() - card.value.as_int() == 1 {
                             actions.push(Action::OnTableau {
                                 from: from_index,
@@ -103,6 +129,32 @@ impl DiamondMine {
         actions
     }
 
-    pub fn apply_action(&mut self, action: Action) { /* TODO */ }
+    pub fn apply_action(&mut self, action: Action) {
+        match action {
+            Action::ToFoundation { from, .. } => {
+                let diamond = self.tableau[from].pop()
+                    .expect("card should be on tableau pile")
+                    .look().expect("card should be face up");
+                assert!(diamond.suit == Suit::Diamond);
+                self.foundation.push(diamond);
+            },
+            Action::OnTableau { to, from, cards } => {
+                for _ in 0..cards.len() {
+                    self.tableau[from].pop();
+                }
+                self.tableau[to]
+                    .extend(cards.into_iter()
+                            .inspect(|card| assert!(card.suit != Suit::Diamond,
+                                                    "action was from {} to {}",
+                                                    from, to))
+                            .map(|card| CardInPlay::new(card,
+                                                        Visibility::FaceUp)));
+                if !self.tableau[from].is_empty() {
+                    let index = self.tableau[from].len()-1;
+                    self.tableau[from][index].flip_up();
+                }
+            }
+        }
+    }
 
 }
