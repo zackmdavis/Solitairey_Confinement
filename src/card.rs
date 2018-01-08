@@ -57,6 +57,24 @@ impl Value {
             _ => false
         }
     }
+
+    pub fn as_int(&self) -> isize {
+        match *self {
+            Value::Ace => 1,
+            Value::Two => 2,
+            Value::Three => 3,
+            Value::Four => 4,
+            Value::Five => 5,
+            Value::Six => 6,
+            Value::Seven => 7,
+            Value::Eight => 8,
+            Value::Nine => 9,
+            Value::Ten => 10,
+            Value::Jack => 11,
+            Value::Queen => 12,
+            Value::King => 13
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -137,5 +155,15 @@ pub fn deal() -> Vec<Card> {
             deck.push(Card::new(suit, value));
         }
     }
+    // XXX need to shuffle! I don't have internet access right now, though
+    // (preventing me from grabbing `rand` from crates.io)
+    //
+    // And (following the scenario described in the README), I kind of like the
+    // conceit of this being a no-dependencies project (if you had internet
+    // access and wanted to procrastinate, you'd probably go for a more
+    // enticing distraction than the solitaire that happened to come with your
+    // OS)
+    //
+    // maybe implement Fisher–Yates??
     deck
 }

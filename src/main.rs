@@ -12,5 +12,5 @@ fn main() {
 
     let game = games::diamond_mine::DiamondMine::new();
     println!("____\n{}", game);
-
+    println!("{:?}", game.generate_actions());
 }
