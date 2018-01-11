@@ -2,4 +2,5 @@ When facing a difficult task to do, and given a computer but no internet access 
 
 I procrastinate by writing AIs to play solitaire for me.
 
-Did you know that the entropy of a deck of playing cards is 5.7 bits??
+Did you know that the entropy of a single playing card is 5.7 bits?? But the entire deck is 225.6 bits!
+
