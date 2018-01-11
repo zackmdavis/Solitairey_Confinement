@@ -2,6 +2,26 @@
 
 use card::{self, Card, Suit, Value};
 
+#[derive(Debug)]
+pub struct Location(usize, usize);
+
+impl Location {
+    pub fn previous(&self) -> Option<Self> {
+        if self.1 == 0 {
+            None
+        } else {
+            Some(Location(self.0, self.1 - 1))
+        }
+    }
+
+    pub fn following(&self) -> Option<Self> {
+        if self.1 == 13 {
+            None
+        } else {
+            Some(Location(self.0, self.1 + 1))
+        }
+    }
+}
 
 #[derive(Debug)]
 pub struct Gaps {
@@ -11,7 +31,7 @@ pub struct Gaps {
 
 #[derive(Debug)]
 pub enum Action {
-    Motion { card: Card, from: (u8, u8), to: (u8, u8) },
+    Motion { card: Card, from: Location, to: Location },
     Redeal
 }
 
@@ -34,20 +54,30 @@ impl Gaps {
         Gaps { structure, remaining_redeals: 2 }
     }
 
-    #[cfg(TODO_borrow_checker_troubles)]
-    pub fn gap_locations(&self) -> Vec<(usize, usize)> {
-        self.structure.iter().enumerate()
-            .flat_map(|(i, row)| {
-                row.iter().enumerate().filter_map(|(j, &slot)| match slot {
-                    Some(_) => None,
-                    None => Some((i, j))
-                })
-            }).collect()
+    pub fn look(&self, location: Location) -> Option<&Card> {
+        self.structure[location.0][location.1].as_ref()
     }
 
-    #[cfg(TODO_borrow_checker_troubles)]
+    pub fn gap_locations(&self) -> Vec<Location> {
+        let mut locations = Vec::new();
+        for (i, row) in self.structure.iter().enumerate() {
+            for (j, &slot) in row.iter().enumerate() {
+                if let None = slot {
+                    locations.push(Location(i, j));
+                }
+            }
+        }
+        locations
+    }
+
     pub fn available_actions(&self) -> Vec<Action> {
         let gaps = self.gap_locations();
+        let _motions = gaps.iter().map(|gap| {
+            let _card_maybe = gap.previous().map(|prior| self.look(prior));
+            // XXX TODO: `Card.succesor` needs to be two different methods, to
+            // disambiguate between wrapping (appropriate to e.g., Diamond Mine
+            // foundation) and nonwrapping (appropriate here) interpretation
+        });
         Vec::new(/* TODO */)
     }
 
@@ -58,7 +88,6 @@ impl Gaps {
 mod tests {
     use super::*;
 
-    #[cfg(TODO_borrow_checker_troubles)]
     #[test]
     fn concerning_gap_detection() {
         let game = Gaps::new();
