@@ -100,7 +100,7 @@ impl DiamondMine {
                 let to_visible = self.visible_in_pile(to_index);
                 // anything can go on an empty tableau space
                 if to_visible.is_empty() {
-                    for (i, card) in from_visible.iter().enumerate() {
+                    for (i, _card) in from_visible.iter().enumerate() {
                         actions.push(Action::OnTableau {
                             from: from_index,
                             to: to_index,

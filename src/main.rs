@@ -16,7 +16,7 @@ fn main() {
 
     loop {
         println!("{}", game);
-        let mut actions: Vec<diamond_mine::Action> = game.generate_actions();
+        let actions: Vec<diamond_mine::Action> = game.generate_actions();
         println!("{} actions available", actions.len());
 
         match player.select_action(actions) {
