@@ -66,7 +66,8 @@ impl DiamondMine {
             None
         } else {
             Some(self.foundation.iter().last()
-                 .expect("nonempty foundation should have card").successor())
+                 .expect("nonempty foundation should have card")
+                 .wrapping_successor())
         }
     }
 

@@ -35,7 +35,7 @@ impl Suit {
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Value {
     Ace,
-    Two,
+    Two, // XXX: maybe we should all them `Deuce`s??
     Three,
     Four,
     Five,
@@ -100,9 +100,19 @@ impl Value {
         }
     }
 
-    pub fn successor(&self) -> Self {
+    pub fn wrapping_successor(&self) -> Self {
         Self::from_int(((self.as_int() + 1) % 13) + 1)
     }
+
+    pub fn successor(&self) -> Option<Self> {
+        let next_value = self.as_int() + 1;
+        if next_value <= 13 {
+            Some(Self::from_int(next_value))
+        } else {
+            None
+        }
+    }
+
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -128,9 +138,18 @@ impl Card {
         self.place(Visibility::FaceUp)
     }
 
-    pub fn successor(&self) -> Card {
-        Card::new(self.suit, self.value.successor())
+    pub fn wrapping_successor(&self) -> Card {
+        Card::new(self.suit, self.value.wrapping_successor())
     }
+
+    pub fn successor(&self) -> Option<Card> {
+        if let Some(value) = self.value.successor() {
+            Some(Card::new(self.suit, value))
+        } else {
+            None
+        }
+    }
+
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]

@@ -1,8 +1,10 @@
 #![allow(dead_code, unused_imports)]
 
+use std::iter;
+
 use card::{self, Card, Suit, Value};
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Location(usize, usize);
 
 impl Location {
@@ -29,10 +31,11 @@ pub struct Gaps {
     remaining_redeals: u8,
 }
 
-#[derive(Debug)]
-pub enum Action {
-    Motion { card: Card, from: Location, to: Location },
-    Redeal
+#[derive(Debug, Clone, Copy)]
+pub struct Motion {
+    card: Card,
+    from: Location,
+    to: Location,
 }
 
 impl Gaps {
@@ -58,6 +61,22 @@ impl Gaps {
         self.structure[location.0][location.1].as_ref()
     }
 
+    pub fn find(&self, target: Card) -> Location {
+        if target.value == Value::Ace {
+            panic!("there are no Aces in this game");
+        }
+        for (i, row) in self.structure.iter().enumerate() {
+            for (j, slot) in row.iter().enumerate() {
+                if let Some(sitting_card) = *slot {
+                    if sitting_card == target {
+                        return Location(i, j);
+                    }
+                }
+            }
+        }
+        panic!("we couldn't find the card?!");
+    }
+
     pub fn gap_locations(&self) -> Vec<Location> {
         let mut locations = Vec::new();
         for (i, row) in self.structure.iter().enumerate() {
@@ -70,15 +89,38 @@ impl Gaps {
         locations
     }
 
-    pub fn available_actions(&self) -> Vec<Action> {
+    #[cfg(XXX_broken_does_not_compile)] // TODO: fix it
+    pub fn available_motions(&self) -> Vec<Motion> {
         let gaps = self.gap_locations();
-        let _motions = gaps.iter().map(|gap| {
-            let _card_maybe = gap.previous().map(|prior| self.look(prior));
-            // XXX TODO: `Card.succesor` needs to be two different methods, to
-            // disambiguate between wrapping (appropriate to e.g., Diamond Mine
-            // foundation) and nonwrapping (appropriate here) interpretation
-        });
-        Vec::new(/* TODO */)
+        gaps.iter().flat_map(|&gap| {
+            if let Some(prior_slot) = gap.previous().map(|prior| self.look(prior)) {
+                if let Some(prior_card) = prior_slot {
+                    if let Some(successor_card) = prior_card.successor() {
+                        let motion = Motion {
+                            card: successor_card,
+                            from: self.find(successor_card),
+                            to: gap
+                        };
+                        vec![motion].iter()
+                    } else {
+                        *&[].iter()
+                    }
+                } else {
+                    *&[].iter()
+                }
+            } else {
+                assert!(gap.1 == 0);
+                // XXX TODO: don't let a deuce be moved if it's already in place
+                let motions = Suit::suits().iter()
+                    .map(|&suit| Card { suit, value: Value::Two })
+                    .map(|two| Motion {
+                        card: two,
+                        from: self.find(two),
+                        to: gap
+                    }).collect::<Vec<_>>();
+                motions.iter()
+            }
+        }).cloned().collect()
     }
 
 }
